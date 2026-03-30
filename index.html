@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JSON IDE - ELS</title>
 
-<!-- Librería para editor tipo VS Code -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.js"></script>
 
 <style>
@@ -51,6 +50,24 @@
     text-align: center;
     margin-top: 10px;
   }
+
+  .screen {
+    display: none;
+  }
+
+  .active {
+    display: block;
+  }
+
+  .project {
+    background: #2a2a2a;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 </style>
 </head>
 
@@ -58,30 +75,125 @@
 
 <header>json editor de codigo (v1.0)</header>
 
-<div id="editor">
+<!-- MENU PRINCIPAL -->
+<div id="menu" class="screen active">
+  <div class="buttons">
+    <button onclick="nuevoProyecto()">➕ Nuevo proyecto</button>
+  </div>
+
+  <div id="lista"></div>
+</div>
+
+<!-- EDITOR -->
+<div id="editorScreen" class="screen">
+
+  <div id="editor">
 {
     "nombre": "valor",
     "entero": 13
 }
-</div>
+  </div>
 
-<div class="buttons">
-  <button onclick="validar()">✅ Validar</button>
-  <button onclick="formatear()">🧹 Formatear</button>
-  <button onclick="exportar()">💾 Exportar JSON</button>
-</div>
+  <div class="buttons">
+    <button onclick="validar()">✅ Validar</button>
+    <button onclick="formatear()">🧹 Formatear</button>
+    <button onclick="exportar()">💾 Exportar JSON</button>
+    <button onclick="guardar()">💾 Guardar</button>
+    <button onclick="volver()">⬅ Volver</button>
+  </div>
 
-<p id="status"></p>
+  <p id="status"></p>
+
+</div>
 
 <script>
-  // Inicializar editor tipo VS Code
   var editor = ace.edit("editor");
-  editor.setTheme("ace/theme/monokai"); // modo oscuro
-  editor.session.setMode("ace/mode/json"); // soporte JSON
+  editor.setTheme("ace/theme/monokai");
+  editor.session.setMode("ace/mode/json");
   editor.setOptions({
     fontSize: "14px",
     showPrintMargin: false
   });
+
+  let proyectoActual = null;
+
+  function cambiarPantalla(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
+
+  function obtenerProyectos() {
+    return JSON.parse(localStorage.getItem("proyectos") || "{}");
+  }
+
+  function guardarProyectos(data) {
+    localStorage.setItem("proyectos", JSON.stringify(data));
+  }
+
+  function renderLista() {
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
+
+    const proyectos = obtenerProyectos();
+
+    for (let nombre in proyectos) {
+      const div = document.createElement("div");
+      div.className = "project";
+
+      div.innerHTML = `
+        <span>${nombre}</span>
+        <div>
+          <button onclick="abrirProyecto('${nombre}')">Abrir</button>
+          <button onclick="borrarProyecto('${nombre}')">🗑</button>
+        </div>
+      `;
+
+      lista.appendChild(div);
+    }
+  }
+
+  function nuevoProyecto() {
+    let nombre = prompt("Nombre del proyecto:");
+    if (!nombre) return;
+
+    proyectoActual = nombre;
+    editor.setValue(`{\n    "nombre": "valor",\n    "entero": 13\n}`, -1);
+
+    cambiarPantalla("editorScreen");
+  }
+
+  function abrirProyecto(nombre) {
+    const proyectos = obtenerProyectos();
+    proyectoActual = nombre;
+    editor.setValue(proyectos[nombre], -1);
+    cambiarPantalla("editorScreen");
+  }
+
+  function guardar() {
+    if (!proyectoActual) return;
+
+    const proyectos = obtenerProyectos();
+    proyectos[proyectoActual] = editor.getValue();
+    guardarProyectos(proyectos);
+
+    document.getElementById("status").innerText = "💾 Guardado";
+    renderLista();
+  }
+
+  function borrarProyecto(nombre) {
+    if (!confirm("¿Borrar proyecto?")) return;
+
+    const proyectos = obtenerProyectos();
+    delete proyectos[nombre];
+    guardarProyectos(proyectos);
+
+    renderLista();
+  }
+
+  function volver() {
+    cambiarPantalla("menu");
+    renderLista();
+  }
 
   function validar() {
     try {
@@ -114,6 +226,9 @@
 
     URL.revokeObjectURL(url);
   }
+
+  // cargar lista al iniciar
+  renderLista();
 </script>
 
 </body>
