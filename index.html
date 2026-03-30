@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON IDE - ELS</title>
+
+<!-- Librería para editor tipo VS Code -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.js"></script>
+
+<style>
+  body {
+    margin: 0;
+    background: #1e1e1e;
+    color: white;
+    font-family: Arial;
+  }
+
+  header {
+    background: #111;
+    padding: 10px;
+    text-align: center;
+    font-size: 18px;
+  }
+
+  #editor {
+    width: 100%;
+    height: 400px;
+  }
+
+  .buttons {
+    padding: 10px;
+    text-align: center;
+  }
+
+  button {
+    background: #007acc;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #005f99;
+  }
+
+  #status {
+    text-align: center;
+    margin-top: 10px;
+  }
+</style>
+</head>
+
+<body>
+
+<header>json editor de codigo (v1.0)</header>
+
+<div id="editor">
+{
+    "nombre": "valor",
+    "entero": 13
+}
+</div>
+
+<div class="buttons">
+  <button onclick="validar()">✅ Validar</button>
+  <button onclick="formatear()">🧹 Formatear</button>
+  <button onclick="exportar()">💾 Exportar JSON</button>
+</div>
+
+<p id="status"></p>
+
+<script>
+  // Inicializar editor tipo VS Code
+  var editor = ace.edit("editor");
+  editor.setTheme("ace/theme/monokai"); // modo oscuro
+  editor.session.setMode("ace/mode/json"); // soporte JSON
+  editor.setOptions({
+    fontSize: "14px",
+    showPrintMargin: false
+  });
+
+  function validar() {
+    try {
+      JSON.parse(editor.getValue());
+      document.getElementById("status").innerText = "✔ JSON válido";
+    } catch (e) {
+      document.getElementById("status").innerText = "❌ Error: " + e.message;
+    }
+  }
+
+  function formatear() {
+    try {
+      let obj = JSON.parse(editor.getValue());
+      editor.setValue(JSON.stringify(obj, null, 2), -1);
+      document.getElementById("status").innerText = "✨ Formateado";
+    } catch {
+      document.getElementById("status").innerText = "❌ JSON inválido bro 😭";
+    }
+  }
+
+  function exportar() {
+    const contenido = editor.getValue();
+    const blob = new Blob([contenido], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "json_arc.json";
+    a.click();
+
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+</body>
+</html>
